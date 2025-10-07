@@ -1,6 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FamilyArchive.Domain\FamilyArchive.Domain.csproj" />
     <ProjectReference Include="..\FamilyArchive.Application\FamilyArchive.Application.csproj" />
   </ItemGroup>
