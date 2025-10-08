@@ -17,9 +17,12 @@ public class Member
     public DateTime? DeathDate { get; set; }
     public string? Gender { get; set; }
 
-    // Rlationships - Dynamic to allow many different types of relationships (only vertical relationships are modeled)
-    public ICollection<MemberRelationship> Relationships { get; set; } = new List<MemberRelationship>();
-    public ICollection<MemberPartnership> Partnerships { get; set; } = new List<MemberPartnership>();
+    // Relationships - Dynamic to allow many different types of relationships (only vertical relationships and partners are modeled)
+
+    public ICollection<MemberRelationship> Relationships { get; set; } = new List<MemberRelationship>(); // as child
+    public ICollection<MemberRelationship> ParentRelationships { get; set; } = new List<MemberRelationship>(); // as parent
+    public ICollection<MemberPartnership> Partnerships { get; set; } = new List<MemberPartnership>(); // as member
+    public ICollection<MemberPartnership> PartnerPartnerships { get; set; } = new List<MemberPartnership>(); // as partner
 
     // For grouping into families/clans
     public Guid? FamilyId { get; set; }
