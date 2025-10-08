@@ -80,6 +80,9 @@ namespace FamilyArchive.Infrastructure.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
+                    b.Property<string>("OtherNameType")
+                        .HasColumnType("text");
+
                     b.Property<int?>("Type")
                         .HasColumnType("integer");
 

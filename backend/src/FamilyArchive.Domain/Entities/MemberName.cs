@@ -16,6 +16,7 @@ public class MemberName
 
     public string Value { get; set; } = default!; // The actual name, supports Unicode by default in .NET
     public NameType? Type { get; set; } // Enum: FirstName, MiddleName, LastName, ChosenName, Nickname, etc.
+    public string? OtherNameType { get; set; } // If Type is Other, specify here
     public int Order { get; set; } // Display order
     public bool Hidden { get; set; } // Hide from display if true
 }
