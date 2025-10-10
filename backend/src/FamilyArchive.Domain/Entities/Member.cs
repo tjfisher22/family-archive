@@ -27,4 +27,11 @@ public class Member
     // For grouping into families/clans
     public Guid? FamilyId { get; set; }
     public Family? Family { get; set; }
+
+    public void AddName(MemberName name)
+    {
+        if (Names.Any(n => n.Order == name.Order))
+            throw new InvalidOperationException("Cannot add a name with a duplicate order.");
+        Names.Add(name);
+    }
 }
