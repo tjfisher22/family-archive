@@ -12,7 +12,8 @@ public class Member
 {
     public Guid Id { get; set; }
     // List of names (first, middle, last, maiden, chosen, nickname, etc.)
-    public ICollection<MemberName> Names { get; set; } = new List<MemberName>();
+    public IReadOnlyCollection<MemberName> Names => _names.AsReadOnly();
+        private List<MemberName> _names = new();
     public DateTime? BirthDate { get; set; }
     public DateTime? DeathDate { get; set; }
     public string? Gender { get; set; }
@@ -30,8 +31,8 @@ public class Member
 
     public void AddName(MemberName name)
     {
-        if (Names.Any(n => n.Order == name.Order))
+        if (_names.Any(n => n.Order == name.Order))
             throw new InvalidOperationException("Cannot add a name with a duplicate order.");
-        Names.Add(name);
+        _names.Add(name);
     }
 }
