@@ -4,27 +4,21 @@ using FamilyArchive.Domain.Enums;
 using System;
 using System.Diagnostics.Metrics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FamilyArchive.Application.Services;
 
 public interface IMemberService
 {
-    //void AddMember(Member member);
-    //void UpdateMember(Member member, MemberDto dto);
-    //void AddName(Member member, MemberName name);
-    //void RemoveName(Member member, Guid memberNameId);
-    //void UpdateName(Member member, MemberNameDto dto);
-    //MemberDto? GetMemberById(Guid memberId);
-    //void AddChild(Member parent, Member child, string relationshipType, DateTime? establishedDate = null);
-    Guid AddMemberFromDto(MemberDto dto);
-    MemberDto GetMemberById(Guid memberId);
-    void UpdateMemberById(Guid memberId, MemberDto dto);
-    void AddNameToMember(Guid memberId, MemberNameDto dto);
-    void UpdateNameOfMember(Guid memberId, Guid nameId, string NewName);
-    void SaveMemberChanges();
-    void UpdateNameOrderOfMember(Guid memberId, Guid nameId, int newOrder);
-    void UpdateNameTypeOfMember(Guid memberId, Guid nameId, NameType? newType, string? OtherNameType);
-    void UpdateNameHiddenOfMember(Guid memberId, Guid nameId, bool hidden);
+    Task<Guid> AddMemberFromDtoAsync(MemberDto dto);
+    Task<MemberDto> GetMemberByIdAsync(Guid memberId);
+    Task UpdateMemberByIdAsync(Guid memberId, MemberDto dto);
+    Task AddNameToMemberAsync(Guid memberId, MemberNameDto dto);
+    Task UpdateNameOfMemberAsync(Guid memberId, Guid nameId, string NewName);
+    Task SaveMemberChangesAsync();
+    Task UpdateNameOrderOfMemberAsync(Guid memberId, Guid nameId, int newOrder);
+    Task UpdateNameTypeOfMemberAsync(Guid memberId, Guid nameId, NameType? newType, string? OtherNameType);
+    Task UpdateNameHiddenOfMemberAsync(Guid memberId, Guid nameId, bool hidden);
 }
 
 public class MemberService : IMemberService
@@ -35,7 +29,7 @@ public class MemberService : IMemberService
     {
         _repository = repository;
     }
-    public Guid AddMemberFromDto(MemberDto dto)
+    public async Task<Guid> AddMemberFromDtoAsync(MemberDto dto)
     {
         var member = new Member
         {
@@ -44,35 +38,34 @@ public class MemberService : IMemberService
             Gender = dto.Gender,
             FamilyId = dto.FamilyId
         };
-        _repository.AddMember(member);
+        await _repository.AddMemberAsync(member);
         return member.Id;
     }
-    public MemberDto GetMemberById(Guid memberId)
+    public async Task<MemberDto> GetMemberByIdAsync(Guid memberId)
     {
-        var member = _repository.GetMemberById(memberId);
+        var member = await _repository.GetMemberByIdAsync(memberId);
         if (member == null) throw new InvalidOperationException("Member not found");
         return ToDto(member);
     }
 
-    public void SaveMemberChanges()
+    public async Task SaveMemberChangesAsync()
     {
-        _repository.SaveChanges();
+        await _repository.SaveChangesAsync();
     }
 
-    public void UpdateMemberById(Guid memberId, MemberDto dto)
+    public async Task UpdateMemberByIdAsync(Guid memberId, MemberDto dto)
     {
-       
-        var member = _repository.GetMemberById(memberId);
+        var member = await _repository.GetMemberByIdAsync(memberId);
         if (member == null) throw new InvalidOperationException("Member not found");
         member.BirthDate = dto.BirthDate;
         member.DeathDate = dto.DeathDate;
         member.FamilyId = dto.FamilyId;
-        _repository.UpdateMember(member);
+        await _repository.UpdateMemberAsync(member);
     }
 
-    public void AddNameToMember(Guid memberId, MemberNameDto dto)
+    public async Task AddNameToMemberAsync(Guid memberId, MemberNameDto dto)
     {
-        var member = _repository.GetMemberById(memberId);
+        var member = await _repository.GetMemberByIdAsync(memberId);
         if (member == null) throw new InvalidOperationException("Member not found");
 
         var name = new MemberName
@@ -87,39 +80,39 @@ public class MemberService : IMemberService
         };
 
         member.AddName(name); 
-        _repository.UpdateMember(member);
+        await _repository.UpdateMemberAsync(member);
     }
 
-    public void UpdateNameOfMember(Guid memberId, Guid nameId, string newName)
+    public async Task UpdateNameOfMemberAsync(Guid memberId, Guid nameId, string newName)
     {
-        var member = GetMember(memberId);
+        var member = await GetMemberAsync(memberId);
         member.UpdateNameValue(nameId, newName);
-        _repository.UpdateMember(member);
+        await _repository.UpdateMemberAsync(member);
     }
-    public void UpdateNameOrderOfMember(Guid memberId, Guid nameId, int newOrder)
+    public async Task UpdateNameOrderOfMemberAsync(Guid memberId, Guid nameId, int newOrder)
     {
-        var member = GetMember(memberId);
+        var member = await GetMemberAsync(memberId);
         member.UpdateNameOrder(nameId, newOrder);
-        _repository.UpdateMember(member);
+        await _repository.UpdateMemberAsync(member);
     }
 
-    public void UpdateNameTypeOfMember(Guid memberId, Guid nameId, NameType? newType, string? OtherNameType)
+    public async Task UpdateNameTypeOfMemberAsync(Guid memberId, Guid nameId, NameType? newType, string? OtherNameType)
     {
-        var member = GetMember(memberId);
+        var member = await GetMemberAsync(memberId);
         member.UpdateNameType(nameId, newType, OtherNameType);
-        _repository.UpdateMember(member);
+        await _repository.UpdateMemberAsync(member);
     }
 
-    public void UpdateNameHiddenOfMember(Guid memberId, Guid nameId, bool hidden)
+    public async Task UpdateNameHiddenOfMemberAsync(Guid memberId, Guid nameId, bool hidden)
     {
-        var member = GetMember(memberId);
+        var member = await GetMemberAsync(memberId);
         member.UpdateNameHidden(nameId, hidden);
-        _repository.UpdateMember(member);
+        await _repository.UpdateMemberAsync(member);
     }
 
-    private Member GetMember(Guid memberId)
+    private async Task<Member> GetMemberAsync(Guid memberId)
     {
-        var member = _repository.GetMemberById(memberId);
+        var member = await _repository.GetMemberByIdAsync(memberId);
         if (member == null) throw new InvalidOperationException("Member not found");
         return member;
     }

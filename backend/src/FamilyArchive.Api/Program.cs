@@ -12,6 +12,7 @@ builder.Services.AddDbContext<FamilyArchiveDbContext>(options =>
 
 // Register application services
 builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddScoped<IMemberRepository, MemberRepository>();
 builder.Services.AddControllers()
       .AddJsonOptions(options =>
       {

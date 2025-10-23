@@ -3,7 +3,7 @@ using FamilyArchive.Application.Services;
 using FamilyArchive.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Reflection.Metadata;
+using System.Threading.Tasks;
 
 namespace FamilyArchive.Api.Controllers;
 
@@ -19,20 +19,20 @@ public class MembersController : ControllerBase
     }
     // Add a new member
     [HttpPost]
-    public IActionResult AddMember([FromBody] MemberDto dto)
+    public async Task<IActionResult> AddMember([FromBody] MemberDto dto)
     {
-        var memberId = _memberService.AddMemberFromDto(dto);
-        _memberService.SaveMemberChanges();
+        var memberId = await _memberService.AddMemberFromDtoAsync(dto);
+        await _memberService.SaveMemberChangesAsync();
         return CreatedAtAction(nameof(GetMember), new { memberId }, memberId);
     }
 
     // Get a member by ID
     [HttpGet("{memberId}")]
-    public IActionResult GetMember(Guid memberId)
+    public async Task<IActionResult> GetMember(Guid memberId)
     {
         try
         {
-            var memberDto = _memberService.GetMemberById(memberId);
+            var memberDto = await _memberService.GetMemberByIdAsync(memberId);
             return Ok(memberDto);
         }
         catch (InvalidOperationException)
@@ -43,12 +43,12 @@ public class MembersController : ControllerBase
 
     // Update a member
     [HttpPut("{memberId}")]
-    public IActionResult UpdateMember(Guid memberId, [FromBody] MemberDto dto)
+    public async Task<IActionResult> UpdateMember(Guid memberId, [FromBody] MemberDto dto)
     {
         try
         {
-            _memberService.UpdateMemberById(memberId, dto);
-            _memberService.SaveMemberChanges();
+            await _memberService.UpdateMemberByIdAsync(memberId, dto);
+            await _memberService.SaveMemberChangesAsync();
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -58,12 +58,12 @@ public class MembersController : ControllerBase
     }
     // Add a name to a member
     [HttpPost("{memberId}/names")]
-    public IActionResult AddName(Guid memberId, [FromBody] MemberNameDto dto)
+    public async Task<IActionResult> AddName(Guid memberId, [FromBody] MemberNameDto dto)
     {
         try
         {
-            _memberService.AddNameToMember(memberId, dto);
-            _memberService.SaveMemberChanges();
+            await _memberService.AddNameToMemberAsync(memberId, dto);
+            await _memberService.SaveMemberChangesAsync();
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -73,12 +73,12 @@ public class MembersController : ControllerBase
     }
     // Update a name of a member
     [HttpPut("{memberId}/names/{nameId}/value")]
-    public IActionResult UpdateName(Guid memberId, Guid nameId, [FromBody] string newName)
+    public async Task<IActionResult> UpdateName(Guid memberId, Guid nameId, [FromBody] string newName)
     {
         try
         {
-            _memberService.UpdateNameOfMember(memberId, nameId, newName);
-            _memberService.SaveMemberChanges();
+            await _memberService.UpdateNameOfMemberAsync(memberId, nameId, newName);
+            await _memberService.SaveMemberChangesAsync();
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -89,12 +89,12 @@ public class MembersController : ControllerBase
 
     // Update the order of a name of a member
     [HttpPut("{memberId}/names/{nameId}/order")]
-    public IActionResult UpdateNameOrder(Guid memberId, Guid nameId, [FromBody] int newOrder)
+    public async Task<IActionResult> UpdateNameOrder(Guid memberId, Guid nameId, [FromBody] int newOrder)
     {
         try
         {
-            _memberService.UpdateNameOrderOfMember(memberId, nameId, newOrder);
-            _memberService.SaveMemberChanges();
+            await _memberService.UpdateNameOrderOfMemberAsync(memberId, nameId, newOrder);
+            await _memberService.SaveMemberChangesAsync();
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -105,12 +105,12 @@ public class MembersController : ControllerBase
 
     // Update the type of a name of a member
     [HttpPut("{memberId}/names/{nameId}/type")]
-    public IActionResult UpdateNameType(Guid memberId, Guid nameId, [FromBody] UpdateNameTypeRequest request)
+    public async Task<IActionResult> UpdateNameType(Guid memberId, Guid nameId, [FromBody] UpdateNameTypeRequest request)
     {
         try
         {
-            _memberService.UpdateNameTypeOfMember(memberId, nameId, request.NewType, request.OtherNameType);
-            _memberService.SaveMemberChanges();
+            await _memberService.UpdateNameTypeOfMemberAsync(memberId, nameId, request.NewType, request.OtherNameType);
+            await _memberService.SaveMemberChangesAsync();
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -121,12 +121,12 @@ public class MembersController : ControllerBase
 
     // Update the hidden status of a name of a member
     [HttpPut("{memberId}/names/{nameId}/hidden")]
-    public IActionResult UpdateNameHidden(Guid memberId, Guid nameId, [FromBody] bool hidden)
+    public async Task<IActionResult> UpdateNameHidden(Guid memberId, Guid nameId, [FromBody] bool hidden)
     {
         try
         {
-            _memberService.UpdateNameHiddenOfMember(memberId, nameId, hidden);
-            _memberService.SaveMemberChanges();
+            await _memberService.UpdateNameHiddenOfMemberAsync(memberId, nameId, hidden);
+            await _memberService.SaveMemberChangesAsync();
             return Ok();
         }
         catch (InvalidOperationException ex)
