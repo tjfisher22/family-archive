@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FamilyArchive.Domain\FamilyArchive.Domain.csproj" />
-    <ProjectReference Include="..\FamilyArchive.Infrastructure\FamilyArchive.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
