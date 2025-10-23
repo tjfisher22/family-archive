@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using FamilyArchive.Domain.Enums;
 
 namespace FamilyArchive.Domain.Entities;
 
@@ -35,9 +36,52 @@ public class Member
             throw new InvalidOperationException("Cannot add a name with a duplicate order.");
         _names.Add(name);
     }
+    
 
     public void RemoveName(Guid memberNameId)
     {
         _names.RemoveAll(_names => _names.Id == memberNameId);
+    }
+
+    public void AddChild(Member child, string relationshipType, DateTime? establishedDate = null)
+    {
+        var relationship = new MemberRelationship
+        {
+            Id = Guid.NewGuid(),
+            Member = child,
+            MemberId = child.Id,
+            RelatedMember = this,
+            RelatedMemberId = this.Id,
+            RelationshipType = relationshipType,
+            EstablishedDate = establishedDate
+        };
+        child.Relationships.Add(relationship);
+        this.ParentRelationships.Add(relationship);
+    }
+
+    public void UpdateName(Guid memberNameId, string value, NameType? type, string? otherNameType, int order, bool hidden)
+    {
+        var name = _names.FirstOrDefault(n => n.Id == memberNameId);
+        if (name == null)
+            throw new InvalidOperationException("Name not found.");
+
+        if (_names.Any(n => n.Order == order && n.Id != memberNameId))
+            throw new InvalidOperationException("Cannot set a duplicate order.");
+
+        name.Value = value;
+        name.Type = type;
+        name.OtherNameType = otherNameType;
+        name.Order = order;
+        name.Hidden = hidden;
+    }
+    public void ReorderName(Guid memberNameId, int newOrder)
+    {
+        //add logic to shift names dynamically
+        var name = _names.FirstOrDefault(n => n.Id == memberNameId);
+        if (name == null)
+            throw new InvalidOperationException("Name not found.");
+        if (_names.Any(n => n.Order == newOrder && n.Id != memberNameId))
+            throw new InvalidOperationException("Cannot set a duplicate order.");
+        name.Order = newOrder;
     }
 }
