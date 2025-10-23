@@ -35,4 +35,9 @@ public class Member
             throw new InvalidOperationException("Cannot add a name with a duplicate order.");
         _names.Add(name);
     }
+
+    public void RemoveName(Guid memberNameId)
+    {
+        _names.RemoveAll(_names => _names.Id == memberNameId);
+    }
 }
