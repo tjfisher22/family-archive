@@ -1,8 +1,7 @@
 ﻿using FamilyArchive.Application.DTOs;
 using FamilyArchive.Domain.Entities;
-using FamilyArchive.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 
 namespace FamilyArchive.Application.Services;
 
@@ -13,26 +12,22 @@ public interface IMemberService
     void AddName(Member member, MemberName name);
     void RemoveName(Member member, Guid memberNameId);
     void UpdateName(Member member, MemberNameDto dto);
-    Member? GetMemberById(Guid memberId);
+    MemberDto? GetMemberById(Guid memberId);
     void SaveMemberChanges();
     void AddChild(Member parent, Member child, string relationshipType, DateTime? establishedDate = null);
-
-    //void UpdateBirthDate(Member member, DateTime? birthDate);
-    //void UpdateDeathDate(Member member, DateTime? deathDate);
-    //void DeleteMember(Member member);
 }
 
 public class MemberService : IMemberService
 {
-    private readonly FamilyArchiveDbContext _context;
+    private readonly IMemberRepository _repository;
 
-    public MemberService(FamilyArchiveDbContext context)
+    public MemberService(IMemberRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
     public void AddMember(Member member)
     {
-        _context.Members.Add(member);
+        _repository.AddMember(member);
     }
     public void UpdateMember(Member member, MemberDto dto)
     {
@@ -40,53 +35,60 @@ public class MemberService : IMemberService
         member.DeathDate = dto.DeathDate;
         member.Gender = dto.Gender;
         member.FamilyId = dto.FamilyId;
+        _repository.UpdateMember(member);
     }
     public void AddName(Member member, MemberName name)
     {
         member.AddName(name);
+        _repository.UpdateMember(member);
     }
     public void RemoveName(Member member, Guid memberNameId)
     {
         member.RemoveName(memberNameId);
+        _repository.UpdateMember(member);
     }
-    public Member? GetMemberById(Guid memberId)
+    public MemberDto? GetMemberById(Guid memberId)
     {
-        // Includes related names, relationships, and partnerships for a complete member object
-        return _context.Members
-            .Include(m => m.Relationships)
-            .Include(m => m.ParentRelationships)
-            .Include(m => m.Partnerships)
-            .Include(m => m.PartnerPartnerships)
-            .Include(m => m.Family)
-            .FirstOrDefault(m => m.Id == memberId);
+        var member = _repository.GetMemberById(memberId);
+        if (member == null) return null;
+        return ToDto(member);
     }
     public void SaveMemberChanges()
     {
-        _context.SaveChanges();
+        _repository.SaveChanges();
     }
 
     public void AddChild(Member parent, Member child, string relationshipType, DateTime? establishedDate = null)
     {
         parent.AddChild(child, relationshipType, establishedDate);
-        // Save changes to the database if needed
-        _context.Update(parent);
-        _context.Update(child);
+        _repository.UpdateMember(parent);
+        _repository.UpdateMember(child);
     }
 
-    //public void UpdateBirthDate(Member member, DateTime? birthDate)
-    //{
-    //    member.BirthDate = birthDate;
-    //    _context.Update(member);
-    //}
-
-    //public void UpdateDeathDate(Member member, DateTime? deathDate)
-    //{
-    //    member.DeathDate = deathDate;
-    //    _context.Update(member);
-    //}
     public void UpdateName(Member member, MemberNameDto dto)
     {
         member.UpdateName(dto.Id, dto.Value, dto.Type, dto.OtherNameType, dto.Order, dto.Hidden);
-        _context.Update(member);
+        _repository.UpdateMember(member);
+    }
+
+    private MemberDto ToDto(Member member)
+    {
+        return new MemberDto
+        {
+            Id = member.Id,
+            BirthDate = member.BirthDate,
+            DeathDate = member.DeathDate,
+            Gender = member.Gender,
+            FamilyId = member.FamilyId,
+            Names = member.Names.Select(n => new MemberNameDto
+            {
+                Id = n.Id,
+                Value = n.Value,
+                Type = n.Type,
+                OtherNameType = n.OtherNameType,
+                Order = n.Order,
+                Hidden = n.Hidden
+            }).ToList()
+        };
     }
 }
