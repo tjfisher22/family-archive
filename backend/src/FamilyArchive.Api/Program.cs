@@ -1,10 +1,12 @@
 using FamilyArchive.Infrastructure.Data;
 using FamilyArchive.Application.Services;
 using Microsoft.EntityFrameworkCore;
+using Swashbuckle.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<FamilyArchiveDbContext>(options =>
@@ -12,6 +14,7 @@ builder.Services.AddDbContext<FamilyArchiveDbContext>(options =>
 
 // Register application services
 builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddScoped<IMemberRepository, MemberRepository>();
 builder.Services.AddControllers()
       .AddJsonOptions(options =>
       {
@@ -21,9 +24,12 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+app.MapControllers();
 
 app.Run();
