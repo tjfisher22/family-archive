@@ -29,21 +29,20 @@ public class MemberRepository : IMemberRepository
         _context.Members.Remove(member);
     }
     
-    public async Task<Member?> GetMemberById(Guid memberId)
+    public Member? GetMemberById(Guid memberId)
     {
-        return await _context.Members
+        return _context.Members
             .Include(m => m.Relationships)
             .Include(m => m.ParentRelationships)
             .Include(m => m.Partnerships)
             .Include(m => m.PartnerPartnerships)
             .Include(m => m.Family)
-            .FirstOrDefaultAsync(m => m.Id == memberId);
-
+            .FirstOrDefault(m => m.Id == memberId);
     }
 
 
-    public async Task SaveChangesAsync()
+    public void SaveChanges()
     {
-        await _context.SaveChangesAsync();
+         _context.SaveChangesAsync();
     }
 }
