@@ -1,7 +1,9 @@
 ﻿using FamilyArchive.Application.DTOs;
 using FamilyArchive.Application.Services;
-using FamilyArchive.Domain.Entities;
+using FamilyArchive.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Reflection.Metadata;
 
 namespace FamilyArchive.Api.Controllers;
 
@@ -15,127 +17,38 @@ public class MembersController : ControllerBase
     {
         _memberService = memberService;
     }
-
-    // Add a name to a member
-    [HttpPost("{memberId}/names")]
-    public IActionResult AddName(Guid memberId, [FromBody] MemberNameDto dto)
-    {
-        var member = _memberService.GetMemberById(memberId);
-        if (member == null)
-        {
-            return NotFound($"Member with ID {memberId} not found.");
-        }
-
-        var name = new MemberName
-        {
-            Id = Guid.NewGuid(),
-            MemberId = memberId,
-            Value = dto.Value,
-            Type = dto.Type,
-            OtherNameType = dto.OtherNameType,
-            Order = dto.Order,
-            Hidden = dto.Hidden
-        };
-
-        try
-        {
-            _memberService.AddName(member, name);
-            _memberService.SaveMemberChanges();
-            // Save changes to the database here (not shown)
-            return Ok();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
     // Add a new member
     [HttpPost]
     public IActionResult AddMember([FromBody] MemberDto dto)
     {
-        var member = new Member
-        {
-            Id = Guid.NewGuid(),
-            BirthDate = dto.BirthDate,
-            DeathDate = dto.DeathDate,
-            Gender = dto.Gender,
-            FamilyId = dto.FamilyId
-        };
-
-        // Optionally add names if provided
-        if (dto.Names != null)
-        {
-            foreach (var nameDto in dto.Names)
-            {
-                var name = new MemberName
-                {
-                    Id = Guid.NewGuid(),
-                    MemberId = member.Id,
-                    Value = nameDto.Value,
-                    Type = nameDto.Type,
-                    OtherNameType = nameDto.OtherNameType,
-                    Order = nameDto.Order,
-                    Hidden = nameDto.Hidden
-                };
-                member.AddName(name);
-            }
-        }
-
-        // Persist the new member
-        _memberService.AddMember(member);
+        var memberId = _memberService.AddMemberFromDto(dto);
         _memberService.SaveMemberChanges();
-
-        return CreatedAtAction(nameof(GetMember), new { memberId = member.Id }, member);
+        return CreatedAtAction(nameof(GetMember), new { memberId }, memberId);
     }
 
     // Get a member by ID
     [HttpGet("{memberId}")]
     public IActionResult GetMember(Guid memberId)
     {
-        var member = _memberService.GetMemberById(memberId);
-        if (member == null)
+        try
+        {
+            var memberDto = _memberService.GetMemberById(memberId);
+            return Ok(memberDto);
+        }
+        catch (InvalidOperationException)
         {
             return NotFound();
         }
-        return Ok(member);
     }
 
     // Update a member
     [HttpPut("{memberId}")]
     public IActionResult UpdateMember(Guid memberId, [FromBody] MemberDto dto)
     {
-        var member = _memberService.GetMemberById(memberId);
-        if (member == null)
-        {
-            return NotFound($"Member with ID {memberId} not found.");
-        }
-
         try
         {
-            _memberService.UpdateMember(member, dto);
+            _memberService.UpdateMemberById(memberId, dto);
             _memberService.SaveMemberChanges();
-            return Ok(member);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    // Update a name of a member
-    [HttpPut("{memberId}/names/{nameId}")]
-    public IActionResult UpdateName(Guid memberId, Guid nameId, [FromBody] MemberNameDto dto)
-    {
-        var member = _memberService.GetMemberById(memberId);
-        if (member == null)
-            return NotFound($"Member with ID {memberId} not found.");
-
-        dto.Id = nameId; // Ensure the correct name is updated
-
-        try
-        {
-            _memberService.UpdateName(member, dto);
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -143,4 +56,83 @@ public class MembersController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+    // Add a name to a member
+    [HttpPost("{memberId}/names")]
+    public IActionResult AddName(Guid memberId, [FromBody] MemberNameDto dto)
+    {
+        try
+        {
+            _memberService.AddNameToMember(memberId, dto);
+            _memberService.SaveMemberChanges();
+            return Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    // Update a name of a member
+    [HttpPut("{memberId}/names/{nameId}/value")]
+    public IActionResult UpdateName(Guid memberId, Guid nameId, [FromBody] string newName)
+    {
+        try
+        {
+            _memberService.UpdateNameOfMember(memberId, nameId, newName);
+            _memberService.SaveMemberChanges();
+            return Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    // Update the order of a name of a member
+    [HttpPut("{memberId}/names/{nameId}/order")]
+    public IActionResult UpdateNameOrder(Guid memberId, Guid nameId, [FromBody] int newOrder)
+    {
+        try
+        {
+            _memberService.UpdateNameOrderOfMember(memberId, nameId, newOrder);
+            _memberService.SaveMemberChanges();
+            return Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    // Update the type of a name of a member
+    [HttpPut("{memberId}/names/{nameId}/type")]
+    public IActionResult UpdateNameType(Guid memberId, Guid nameId, [FromBody] UpdateNameTypeRequest request)
+    {
+        try
+        {
+            _memberService.UpdateNameTypeOfMember(memberId, nameId, request.NewType, request.OtherNameType);
+            _memberService.SaveMemberChanges();
+            return Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    // Update the hidden status of a name of a member
+    [HttpPut("{memberId}/names/{nameId}/hidden")]
+    public IActionResult UpdateNameHidden(Guid memberId, Guid nameId, [FromBody] bool hidden)
+    {
+        try
+        {
+            _memberService.UpdateNameHiddenOfMember(memberId, nameId, hidden);
+            _memberService.SaveMemberChanges();
+            return Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 }
