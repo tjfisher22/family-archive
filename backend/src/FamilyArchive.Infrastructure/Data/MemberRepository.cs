@@ -1,8 +1,8 @@
-using FamilyArchive.Application.Services;
 using FamilyArchive.Domain.Entities;
+using FamilyArchive.Application.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace FamilyArchive.Infrastructure.Data;
 
@@ -15,21 +15,22 @@ public class MemberRepository : IMemberRepository
         _context = context;
     }
 
-    public void AddMember(Member member)
+    public async Task AddMemberAsync(Member member)
     {
-        _context.Members.Add(member);
+        await _context.Members.AddAsync(member);
     }
 
-    public void UpdateMember(Member member)
+    public async Task UpdateMemberAsync(Member member)
     {
         _context.Members.Update(member);
+        await Task.CompletedTask;
     }
-    public void RemoveMember(Member member)
+    public async Task RemoveMemberAsync(Member member)
     {
         _context.Members.Remove(member);
+        await Task.CompletedTask;
     }
-    
-    public async Task<Member?> GetMemberById(Guid memberId)
+    public async Task<Member?> GetMemberByIdAsync(Guid memberId)
     {
         return await _context.Members
             .Include(m => m.Relationships)
@@ -38,9 +39,7 @@ public class MemberRepository : IMemberRepository
             .Include(m => m.PartnerPartnerships)
             .Include(m => m.Family)
             .FirstOrDefaultAsync(m => m.Id == memberId);
-
     }
-
 
     public async Task SaveChangesAsync()
     {
