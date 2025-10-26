@@ -9,13 +9,6 @@ namespace FamilyArchive.Application.Services;
 
 public interface IMemberService
 {
-    //void AddMember(Member member);
-    //void UpdateMember(Member member, MemberDto dto);
-    //void AddName(Member member, MemberName name);
-    //void RemoveName(Member member, Guid memberNameId);
-    //void UpdateName(Member member, MemberNameDto dto);
-    //MemberDto? GetMemberById(Guid memberId);
-    //void AddChild(Member parent, Member child, string relationshipType, DateTime? establishedDate = null);
     Guid AddMemberFromDto(MemberDto dto);
     MemberDto GetMemberById(Guid memberId);
     void UpdateMemberById(Guid memberId, MemberDto dto);

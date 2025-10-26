@@ -16,5 +16,7 @@ public enum RelationshipType
     AdoptiveFather,
     //typically used in polyamorous or non-traditional family structures
     OtherMother,
-    OtherFather
+    OtherFather,
+    Guardian,
+    Other
 }
