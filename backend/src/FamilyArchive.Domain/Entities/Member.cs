@@ -29,6 +29,8 @@ public class Member
     // For grouping into families/clans
     public Guid? FamilyId { get; set; }
     public Family? Family { get; set; }
+    public Guid? ClanId { get; set; }
+    public Clan? Clan { get; set; }
 
     public void AddName(MemberName name)
     {
@@ -45,6 +47,13 @@ public class Member
 
     public void AddChild(Member child, string relationshipType, DateTime? establishedDate = null)
     {
+        if (child.Id == this.Id)
+            throw new InvalidOperationException("A member cannot be their own child.");
+
+        // Prevent circular parent-child relationships
+        if (child.ParentRelationships.Any(r => r.MemberId == this.Id))
+            throw new InvalidOperationException("Circular parent-child relationship detected.");
+
         var relationship = new MemberRelationship
         {
             Id = Guid.NewGuid(),
