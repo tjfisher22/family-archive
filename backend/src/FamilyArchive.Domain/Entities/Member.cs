@@ -67,6 +67,16 @@ public class Member
         child.Relationships.Add(relationship);
         this.ParentRelationships.Add(relationship);
     }
+    public void RemoveChild(Member child)
+    {
+        var relationship = child.Relationships.FirstOrDefault(r => r.RelatedMemberId == this.Id);
+        if (relationship != null)
+        {
+            child.Relationships.Remove(relationship);
+            this.ParentRelationships.Remove(relationship);
+        }
+    }
+
     public void UpdateNameValue(Guid memberNameId, string value)
     {
         var name = _names.FirstOrDefault(n => n.Id == memberNameId);
