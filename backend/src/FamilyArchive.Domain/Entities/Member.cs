@@ -45,7 +45,7 @@ public class Member
         _names.RemoveAll(_names => _names.Id == memberNameId);
     }
 
-    public void AddChild(Member child, string relationshipType, DateTime? establishedDate = null)
+    public void AddChild(Member child, RelationshipType relationshipType, string? relationshipOtherType, DateTime? establishedDate = null)
     {
         if (child.Id == this.Id)
             throw new InvalidOperationException("A member cannot be their own child.");
@@ -75,6 +75,33 @@ public class Member
             child.Relationships.Remove(relationship);
             this.ParentRelationships.Remove(relationship);
         }
+    }
+    public void AddPartner(Member partner, PartnershipType partnershipType, string? partnershipOtherType, DateTime? startDate = null)
+    {
+        if (partner.Id == this.Id)
+            throw new InvalidOperationException("A member cannot be their own partner.");
+        var partnership = new MemberPartnership
+        {
+            Id = Guid.NewGuid(),
+            Member = this,
+            MemberId = this.Id,
+            Partner = partner,
+            PartnerId = partner.Id,
+            PartnershipType = partnershipType,
+            StartDate = startDate
+        };
+        this.Partnerships.Add(partnership);
+        partner.PartnerPartnerships.Add(partnership);
+    }
+    public void EndPartnership(Guid partnershipId, DateTime endDate)
+    {
+        var partnership = Partnerships.FirstOrDefault(p => p.Id == partnershipId)
+            ?? PartnerPartnerships.FirstOrDefault(p => p.Id == partnershipId);
+
+        if (partnership == null)
+            throw new InvalidOperationException("Partnership not found.");
+
+        partnership.EndDate = endDate;
     }
 
     public void UpdateNameValue(Guid memberNameId, string value)

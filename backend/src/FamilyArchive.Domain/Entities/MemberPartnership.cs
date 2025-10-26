@@ -17,4 +17,5 @@ public class MemberPartnership
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public PartnershipType PartnershipType { get; set; } // e.g., "Marriage", "CivilUnion", "DomesticPartnership", etc.
+    public string? OtherNameType { get; set; } // If Type is Other, specify here
 }

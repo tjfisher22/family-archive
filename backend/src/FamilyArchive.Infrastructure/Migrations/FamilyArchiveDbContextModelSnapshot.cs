@@ -22,6 +22,24 @@ namespace FamilyArchive.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("FamilyArchive.Domain.Entities.Clan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Clan");
+                });
+
             modelBuilder.Entity("FamilyArchive.Domain.Entities.Family", b =>
                 {
                     b.Property<Guid>("Id")
@@ -49,6 +67,9 @@ namespace FamilyArchive.Infrastructure.Migrations
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("ClanId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("DeathDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -59,6 +80,8 @@ namespace FamilyArchive.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClanId");
 
                     b.HasIndex("FamilyId");
 
@@ -109,6 +132,9 @@ namespace FamilyArchive.Infrastructure.Migrations
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("OtherNameType")
+                        .HasColumnType("text");
+
                     b.Property<Guid>("PartnerId")
                         .HasColumnType("uuid");
 
@@ -139,12 +165,14 @@ namespace FamilyArchive.Infrastructure.Migrations
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("OtherNameType")
+                        .HasColumnType("text");
+
                     b.Property<Guid>("RelatedMemberId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("RelationshipType")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("RelationshipType")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -157,10 +185,16 @@ namespace FamilyArchive.Infrastructure.Migrations
 
             modelBuilder.Entity("FamilyArchive.Domain.Entities.Member", b =>
                 {
+                    b.HasOne("FamilyArchive.Domain.Entities.Clan", "Clan")
+                        .WithMany("Members")
+                        .HasForeignKey("ClanId");
+
                     b.HasOne("FamilyArchive.Domain.Entities.Family", "Family")
                         .WithMany("Members")
                         .HasForeignKey("FamilyId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Clan");
 
                     b.Navigation("Family");
                 });
@@ -212,6 +246,11 @@ namespace FamilyArchive.Infrastructure.Migrations
                     b.Navigation("Member");
 
                     b.Navigation("RelatedMember");
+                });
+
+            modelBuilder.Entity("FamilyArchive.Domain.Entities.Clan", b =>
+                {
+                    b.Navigation("Members");
                 });
 
             modelBuilder.Entity("FamilyArchive.Domain.Entities.Family", b =>
