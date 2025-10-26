@@ -6,18 +6,18 @@ namespace FamilyArchive.Api.Controllers;
 [Route("api/[controller]")]
 public class ImportController : ControllerBase
 {
-    private readonly IMassImportService _importService;
+    //private readonly IMassImportService _importService;
 
-    public ImportController(IMassImportService importService)
-    {
-        _importService = importService;
-    }
+    //public ImportController(IMassImportService importService)
+    //{
+    //    _importService = importService;
+    //}
 
-    [HttpPost]
-    [Route("mass")]
-    public async Task<IActionResult> MassImport([FromForm] IFormFile file)
-    {
-        var result = await _importService.ImportAsync(file);
-        return Ok(result);
-    }
+    //[HttpPost]
+    //[Route("mass")]
+    //public async Task<IActionResult> MassImport([FromForm] IFormFile file)
+    //{
+    //    var result = await _importService.ImportAsync(file);
+    //    return Ok(result);
+    //}
 }
