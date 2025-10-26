@@ -1,4 +1,4 @@
-﻿namespace FamilyArchive.Api.Controllers;
+﻿namespace FamilyArchive.Application.Services;
 public interface IMassImportService
 {
 }
