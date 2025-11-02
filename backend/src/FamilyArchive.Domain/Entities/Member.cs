@@ -119,6 +119,7 @@ public class Member
             throw new InvalidOperationException("Name not found.");
 
         name.Type = type;
+        //TODO: add logic to enforce other name type input when Type is other
         name.OtherNameType = otherNameType;
     }
     public void UpdateNameOrder(Guid memberNameId, int order)
