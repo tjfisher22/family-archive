@@ -16,5 +16,5 @@ public enum NameType
     NickName,
     DeadName,
     LegalName,
-    OtherName,
+    Other,
 }
