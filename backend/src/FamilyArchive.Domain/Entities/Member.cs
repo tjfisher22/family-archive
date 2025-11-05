@@ -32,10 +32,29 @@ public class Member
     public Guid? ClanId { get; set; }
     public Clan? Clan { get; set; }
 
+    private void EnforceOtherNameType(MemberName name, NameType? type, string? otherNameType)
+    {
+        name.Type = type;
+
+        // Enforce other name type input when Type is Other
+        if (type == NameType.Other)
+        {
+            if (string.IsNullOrWhiteSpace(otherNameType))
+                throw new InvalidOperationException("OtherNameType must be provided when NameType is Other.");
+            name.OtherNameType = otherNameType;
+        }
+        else
+        {
+            name.OtherNameType = null;
+        }
+    }
+
     public void AddName(MemberName name)
     {
         if (_names.Any(n => n.Order == name.Order))
             throw new InvalidOperationException("Cannot add a name with a duplicate order.");
+
+        EnforceOtherNameType(name, name.Type, name.OtherNameType);
         _names.Add(name);
     }
     
@@ -118,8 +137,7 @@ public class Member
         if (name == null)
             throw new InvalidOperationException("Name not found.");
 
-        name.Type = type;
-        name.OtherNameType = otherNameType;
+        EnforceOtherNameType(name, type, otherNameType);
     }
     public void UpdateNameOrder(Guid memberNameId, int order)
     {
