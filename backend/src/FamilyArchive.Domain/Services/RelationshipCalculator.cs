@@ -115,6 +115,7 @@ public class RelationshipCalculator
     //TODO: Implement FindRelationshipPath and DescribeRelationship for complex relationships
     private object FindRelationshipPath(Member memberA, Member memberB)
     {
+        //should return two paths (one for each member) that connect to a common ancestor
         throw new NotImplementedException();
     }
     private string DescribeRelationship(object path, Member memberA, Member memberB)
