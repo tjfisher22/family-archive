@@ -74,14 +74,14 @@ public class RelationshipCalculator
         var bParents = b.Relationships.Select(r => r.RelatedMemberId).ToHashSet();
         var commonParents = aParents.Intersect(bParents).Count();
 
-        var siblingType = commonParents > 1 ? "Full Sibling" : "Half-Sibling";
+        var siblingType = commonParents > 1 ? "Full" : "Half";
 
         // Get gender-specific term, falling back gracefully
         var genderSpecificTerm = GetGenderSpecificTerm(b.Gender, "Sister", "Brother");
-        
-        return genderSpecificTerm != null 
-            ? $"{siblingType} ({genderSpecificTerm})" 
-            : siblingType;
+
+        return genderSpecificTerm != null
+            ? $"{siblingType} {genderSpecificTerm}"
+            : $"{siblingType} sibling";
     }
 
     private string? GetGenderSpecificTerm(Member member, string femaleLabel, string maleLabel)
