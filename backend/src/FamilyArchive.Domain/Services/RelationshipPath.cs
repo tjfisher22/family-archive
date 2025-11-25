@@ -27,12 +27,7 @@ public class RelationshipPath
 
 public class RelationshipStep
 {
-    public Direction Direction { get; set; }
     public Member Member { get; set; } = default!;
     public Gender Gender => Member.Gender;
-}
-public enum Direction
-{
-    Up,
-    Down
+    // Direction is implicit: if before LCA it's "up", if after it's "down"
 }
