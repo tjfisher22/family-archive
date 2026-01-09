@@ -1,5 +1,6 @@
 using FamilyArchive.Infrastructure.Data;
 using FamilyArchive.Application.Services;
+using FamilyArchive.Domain.Services;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore;
 
@@ -15,6 +16,11 @@ builder.Services.AddDbContext<FamilyArchiveDbContext>(options =>
 // Register application services
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
+builder.Services.AddScoped<IRelationshipService, RelationshipService>();
+
+// Register domain services
+builder.Services.AddScoped<RelationshipCalculator>();
+
 builder.Services.AddControllers()
       .AddJsonOptions(options =>
       {
