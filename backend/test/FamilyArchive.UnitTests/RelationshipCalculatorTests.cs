@@ -194,12 +194,12 @@ public class RelationshipCalculatorTests
     public void CalculateRelationship_MarriedNonBinary_ReturnsSpouse()
     {
         // Arrange
-        var personA = CreateMember(Gender.NonBinary);
-        var personB = CreateMember(Gender.Female);
-        personA.AddPartner(personB, PartnershipType.Marriage, null);
+        var spouse = CreateMember(Gender.NonBinary);
+        var wife = CreateMember(Gender.Female);
+        wife.AddPartner(spouse, PartnershipType.Marriage, null);
 
         // Act
-        var result = _calculator.CalculateRelationship(personA, personB);
+        var result = _calculator.CalculateRelationship(wife, spouse);
 
         // Assert
         Assert.Equal("Spouse", result);
@@ -276,7 +276,7 @@ public class RelationshipCalculatorTests
         // Act
         var result = _calculator.CalculateRelationship(memberA, memberB);
         // Assert
-        Assert.Equal("Not Related", result);
+        Assert.Equal("Not related", result);
     }
     #endregion
 
