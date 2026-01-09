@@ -267,7 +267,17 @@ public class RelationshipCalculatorTests
         // Assert
         Assert.Equal("Full Sister", result);
     }
-
+    [Fact]
+    public void CalculateRelationship_NotRelated_ReturnsNotRelated()
+    {
+        // Arrange
+        var memberA = CreateMember(Gender.Male);
+        var memberB = CreateMember(Gender.Female);
+        // Act
+        var result = _calculator.CalculateRelationship(memberA, memberB);
+        // Assert
+        Assert.Equal("Not Related", result);
+    }
     #endregion
 
     #region Complex Relationships (These will fail until FindRelationshipPath is implemented)
@@ -332,9 +342,58 @@ public class RelationshipCalculatorTests
         Assert.Equal("First Cousin", result);
     }
 
-    #endregion
+    [Fact(Skip = "Not implemented yet - requires FindRelationshipPath")]
+    public void CalculateRelationship_SecondCousin_ReturnsSecondCousin()
+    {
+        // Arrange
+        var greatGrandparent = CreateMember(Gender.Male);
+        var grandparent1 = CreateMember(Gender.Female);
+        var grandparent2 = CreateMember(Gender.Female);
+        var parent1 = CreateMember(Gender.Male);
+        var parent2 = CreateMember(Gender.Female);
+        var cousinA = CreateMember(Gender.Male);
+        var cousinB = CreateMember(Gender.Male);
 
-    #region Helper Methods
+        greatGrandparent.AddChild(grandparent1, RelationshipType.BiologicalFather, null);
+        greatGrandparent.AddChild(grandparent2, RelationshipType.BiologicalFather, null);
+        grandparent1.AddChild(parent1, RelationshipType.BiologicalMother, null);
+        grandparent2.AddChild(parent2, RelationshipType.BiologicalMother, null);
+        parent1.AddChild(cousinA, RelationshipType.BiologicalFather, null);
+        parent2.AddChild(cousinB, RelationshipType.BiologicalMother, null);
+        // Act
+        var result = _calculator.CalculateRelationship(cousinA, cousinB);
+        // Assert
+        Assert.Equal("Second Cousin", result);
+    }
+
+    [Fact(Skip = "Not implemented yet - requires FindRelationshipPath")]
+    public void CalculateRelationship_FirstCousinOnceRemoved_ReturnsFirstCousinOnceRemoved()
+    {
+        // Arrange
+        var greatGrandparent = CreateMember(Gender.Male);
+        var grandparent1 = CreateMember(Gender.Female);
+        var parent1 = CreateMember(Gender.Male);
+        var parent2 = CreateMember(Gender.Female);
+        var cousinA = CreateMember(Gender.Male);
+        var cousinB = CreateMember(Gender.Male);
+
+        greatGrandparent.AddChild(grandparent1, RelationshipType.BiologicalFather, null);
+        greatGrandparent.AddChild(parent2, RelationshipType.BiologicalFather, null);
+        grandparent1.AddChild(parent1, RelationshipType.BiologicalMother, null);
+        parent1.AddChild(cousinA, RelationshipType.BiologicalFather, null);
+        parent2.AddChild(cousinB, RelationshipType.BiologicalMother, null);
+
+        // Act
+        var result = _calculator.CalculateRelationship(cousinA, cousinB);
+
+        // Assert
+        Assert.Equal("First Cousin Once Removed", result);
+    }
+
+
+        #endregion
+
+        #region Helper Methods
 
     private Member CreateMember(Gender gender)
     {
