@@ -297,10 +297,10 @@ public class RelationshipCalculatorTests
         var result = _calculator.CalculateRelationship(grandchild, grandmother);
 
         // Assert
-        Assert.Equal("Grandmother", result); // Or "Maternal Grandmother"
+        Assert.Equal("Grandmother", result);
     }
 
-    [Fact(Skip = "Not implemented yet - requires FindRelationshipPath")]
+    [Fact]
     public void CalculateRelationship_Uncle_ReturnsUncle()
     {
         // Arrange
@@ -317,7 +317,7 @@ public class RelationshipCalculatorTests
         var result = _calculator.CalculateRelationship(child, uncle);
 
         // Assert
-        Assert.Equal("Uncle", result); // Or "Maternal Uncle"
+        Assert.Equal("Uncle", result);
     }
 
     [Fact(Skip = "Not implemented yet - requires FindRelationshipPath")]
