@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using FamilyArchive.Domain.Entities;
 using FamilyArchive.Domain.Enums;
@@ -31,11 +32,11 @@ public class RelationshipCalculator
             return GetSiblingDescription(memberA, memberB);
 
         // For more complex relationships, find the path
-        var path = FindRelationshipPath(memberA, memberB);
-        if (path == null)
+        var connection = FindRelationshipPath(memberA, memberB);
+        if (connection == null)
             return "Not related";
 
-        return DescribeRelationship(path, memberA, memberB);
+        return DescribeRelationship(connection, memberA, memberB);
     }
 
 
@@ -113,7 +114,7 @@ public class RelationshipCalculator
             return partnership.PartnershipType.GetDisplayName();
     }
     //TODO: Implement FindRelationshipPath and DescribeRelationship for complex relationships
-    private RelationshipPath? FindRelationshipPath(Member memberA, Member memberB)
+    private RelationshipConnection? FindRelationshipPath(Member memberA, Member memberB)
     {
         // TODO: Implement bidirectional BFS to find the Lowest Common Ancestor (LCA)
         // 
@@ -133,36 +134,67 @@ public class RelationshipCalculator
         // 
         // 4. Return a RelationshipPath object with all steps and the CommonAncestor set
 
-        throw new NotImplementedException();
+        return null; // Placeholder until implemented
     }
 
-    private string DescribeRelationship(RelationshipPath path, Member memberA, Member memberB)
+    private string DescribeRelationship(RelationshipConnection connection, Member memberA, Member memberB)
     {
-        // TODO: Convert the relationship path into a human-readable description
-        // 
-        // Approach:
-        // 1. Extract gender sequence from path (e.g., "MFM")
-        //    - Use path.Steps to get genders of each node in the path
-        // 
-        // 2. Determine direction for each step (Up to LCA or Down from LCA)
-        //    - Find LCA index in the steps list
-        //    - Steps before LCA = "Up", steps after LCA = "Down"
-        // 
-        // 3. Look up the relationship name based on:
-        //    - Gender sequence
-        //    - Direction sequence (Up/Down pattern)
-        //    - The gender of memberB (for gender-specific terms like "sister" vs "brother")
-        // 
-        // 4. Handle edge cases:
-        //    - Non-binary genders (fallback to neutral terms)
-        //    - In-law relationships (if path crosses partnerships)
-        //    - Cultural variations (different kinship systems)
-        // 
-        // 5. Return the formatted relationship string
 
-        throw new NotImplementedException();
+        //Beter approach************
+        var shortestDistance = Math.Min(connection.GenerationsUpFromA, connection.GenerationsUpFromB);
+        var generationDifference = Math.Abs(connection.GenerationsUpFromA - connection.GenerationsUpFromB);
+
+        string? completeTerm = null;
+
+        if (shortestDistance == 1)
+        {
+            if (generationDifference == 0) //Should be resolved prior, but just in case
+            {
+                // Siblings
+                return GetSiblingDescription(memberA, memberB);
+            }
+            else if (generationDifference >= 1)
+            {
+
+                string generationTerm = $"{GetGeneration(generationDifference)} {(generationDifference > 1 ? "Great" : "")}";
+
+                // Aunt/Uncle or Niece/Nephew
+                if (connection.GenerationsUpFromA < connection.GenerationsUpFromB)
+                {
+                    // memberA is Aunt/Uncle of memberB
+                    var genderedTerm = GetGenderSpecificTerm(memberA.Gender, "Aunt", "Uncle") ?? "Pibling";
+                    completeTerm = generationTerm + genderedTerm;
+
+                }
+                else
+                {
+                    // memberA is Niece/Nephew of memberB
+                    var genderedTerm = GetGenderSpecificTerm(memberB.Gender, "Niece", "Nephew") ?? "Nibling";
+                    completeTerm = generationTerm + genderedTerm;
+                }
+            }
+        }
+        else
+        {
+            // Cousins
+            var cousinDegree = shortestDistance - 1;
+            string ordinalTerm = GetOrdinal(cousinDegree);
+            string generationTerm = $"{GetGeneration(generationDifference)} Removed";
+
+            var genderedTerm = GetGenderSpecificTerm(memberA.Gender, "Cousin", "Cousin") ?? "Cousin"; //Included for translation purposes
+
+
+            completeTerm = generationTerm + genderedTerm;
+
+
+
+        }
+
+        if (completeTerm != null)
+            return completeTerm;
+        return "Not related";
+
     }
-
     // TODO: Create a private helper method for BFS ancestor exploration
     // private BfsAncestorResult GetAncestorsBfs(Member startMember)
     // {
@@ -185,4 +217,29 @@ public class RelationshipCalculator
     //     public Member Member { get; set; }
     //     public BfsNode? Parent { get; set; }  // BFS tree parent (for path reconstruction)
     // }
+    private string GetGeneration(int number)
+    {
+        return number switch
+        {
+            0 => "",
+            //1 => "",
+            _ => $"{number} x"
+        };
+    }
+    private string GetOrdinal(int number)
+    {
+        int lastDigit = number % 10;
+        int lastTwoDigits = number % 100;
+        
+        if (lastTwoDigits >= 11 && lastTwoDigits <= 13)
+            return $"{number}th";
+        
+        return lastDigit switch
+        {
+            1 => $"{number}st",
+            2 => $"{number}nd",
+            3 => $"{number}rd",
+            _ => $"{number}th"
+        };
+    }
 }
