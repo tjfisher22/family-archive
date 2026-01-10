@@ -183,11 +183,7 @@ public class RelationshipCalculator
 
             var genderedTerm = GetGenderSpecificTerm(memberA.Gender, "Cousin", "Cousin") ?? "Cousin"; //Included for translation purposes
 
-
-            completeTerm = generationTerm + genderedTerm;
-
-
-
+            completeTerm = ordinalTerm + generationTerm + genderedTerm;
         }
 
         if (completeTerm != null)
