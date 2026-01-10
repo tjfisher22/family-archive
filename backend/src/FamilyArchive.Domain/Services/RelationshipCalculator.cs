@@ -10,9 +10,47 @@ namespace FamilyArchive.Domain.Services;
 public class RelationshipCalculator
 {
     /// <summary>
-    /// Calculates the familial relationship between two members
+    /// Calculates the closest familial relationship between two members
     /// </summary>
-    public string CalculateRelationship(Member memberA, Member memberB)
+    public string CalculateClosestRelationship(Member memberA, Member memberB)
+    {
+        var closeRelationship = GetCloseRelationship(memberA, memberB);
+        if (closeRelationship != null)
+            return closeRelationship;
+
+        // For more complex relationships, find all paths and use the closest
+        var connections = FindAllRelationshipPaths(memberA, memberB);
+        if (connections.Count == 0)
+            return "Not related";
+
+        var closestConnection = connections[0]; // Already sorted by shortest path
+        return DescribeRelationship(closestConnection, memberA, memberB);
+    }
+
+    /// <summary>
+    /// Calculates all familial relationships between two members, sorted by shortest path first
+    /// </summary>
+    public List<string> CalculateAllRelationships(Member memberA, Member memberB)
+    {
+        var closeRelationship = GetCloseRelationship(memberA, memberB);
+        if (closeRelationship != null)
+            return new List<string> { closeRelationship };
+
+        // For more complex relationships, find all paths
+        var connections = FindAllRelationshipPaths(memberA, memberB);
+        if (connections.Count == 0)
+            return new List<string> { "Not related" };
+
+        return connections
+            .Select(conn => DescribeRelationship(conn, memberA, memberB))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Checks for close relationships (self, partners, direct parent-child, and siblings).
+    /// Returns the relationship description if found, null otherwise.
+    /// </summary>
+    private string? GetCloseRelationship(Member memberA, Member memberB)
     {
         if (memberA.Id == memberB.Id)
             return "Self";
@@ -23,7 +61,7 @@ public class RelationshipCalculator
 
         // Check direct parent-child
         if (IsDirectChild(memberA, memberB))
-            return "Child";
+            return GetGenderSpecificTerm(memberB,"Daughter","Son") ?? "Child";
         if (IsDirectChild(memberB, memberA))
             return GetParentDescription(memberB, memberA);
 
@@ -31,15 +69,8 @@ public class RelationshipCalculator
         if (AreSiblings(memberA, memberB))
             return GetSiblingDescription(memberA, memberB);
 
-        // For more complex relationships, find the path
-        var connection = FindRelationshipPath(memberA, memberB);
-        if (connection == null)
-            return "Not related";
-
-        return DescribeRelationship(connection, memberA, memberB);
+        return null;
     }
-
-
 
     private bool IsPartner(Member a, Member b)
     {
@@ -82,7 +113,7 @@ public class RelationshipCalculator
 
         return genderSpecificTerm != null
             ? $"{siblingType} {genderSpecificTerm}"
-            : $"{siblingType} sibling";
+            : $"{siblingType} Sibling";
     }
 
     private string? GetGenderSpecificTerm(Member member, string femaleLabel, string maleLabel)
@@ -113,115 +144,216 @@ public class RelationshipCalculator
         else
             return partnership.PartnershipType.GetDisplayName();
     }
-    //TODO: Implement FindRelationshipPath and DescribeRelationship for complex relationships
-    private RelationshipConnection? FindRelationshipPath(Member memberA, Member memberB)
-    {
-        // TODO: Implement bidirectional BFS to find the Lowest Common Ancestor (LCA)
-        // 
-        // High-level approach:
-        // 1. Use BFS to explore ALL ancestors of memberA (handling multiple parents)
-        //    - Store visited nodes with their parent pointers (for path reconstruction)
-        //    - Use a Queue to process nodes level by level
-        // 
-        // 2. Use BFS to explore ALL ancestors of memberB
-        //    - When a node is found that's already visited from memberA search, that's the LCA
-        //    - Stop search once LCA is found
-        // 
-        // 3. Reconstruct the path:
-        //    - Backtrack from memberA to LCA using parent pointers
-        //    - Backtrack from memberB to LCA using parent pointers
-        //    - Combine: memberA ? LCA ? memberB (handling the LCA duplication)
-        // 
-        // 4. Return a RelationshipPath object with all steps and the CommonAncestor set
 
-        return null; // Placeholder until implemented
+    /// <summary>
+    /// Finds all relationship paths between two members through their common ancestors.
+    /// Paths are sorted by shortest total distance first.
+    /// </summary>
+    private List<RelationshipConnection> FindAllRelationshipPaths(Member memberA, Member memberB)
+    {
+        var ancestorsA = GetAncestorsBfs(memberA);
+        var ancestorsB = GetAncestorsBfs(memberB);
+
+        var commonAncestorIds = ancestorsA.Keys.Intersect(ancestorsB.Keys).ToList();
+        
+        if (commonAncestorIds.Count == 0)
+            return new List<RelationshipConnection>();
+
+        var connections = new List<RelationshipConnection>();
+
+        foreach (var ancestorId in commonAncestorIds)
+        {
+            var pathA = ReconstructPath(ancestorId, ancestorsA);
+            var pathB = ReconstructPath(ancestorId, ancestorsB);
+
+            if (pathA?.Steps.Count > 0 && pathB?.Steps.Count > 0)
+            {
+                var commonAncestor = pathA.CommonAncestor;
+                var connection = new RelationshipConnection
+                {
+                    PathFromMemberA = pathA,
+                    PathFromMemberB = pathB,
+                    CommonAncestor = commonAncestor
+                };
+                connections.Add(connection);
+            }
+        }
+
+        // Sort by shortest combined path first (sum of generations up)
+        return connections
+            .OrderBy(c => c.GenerationsUpFromA + c.GenerationsUpFromB)
+            .ThenBy(c => Math.Abs(c.GenerationsUpFromA - c.GenerationsUpFromB))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Performs BFS from a starting member to find all ancestors and their paths.
+    /// Returns a dictionary mapping ancestor member IDs to BFS nodes for path reconstruction.
+    /// </summary>
+    private Dictionary<Guid, BfsNode> GetAncestorsBfs(Member startMember)
+    {
+        var visited = new Dictionary<Guid, BfsNode>();
+        var queue = new Queue<BfsNode>();
+
+        var startNode = new BfsNode { Member = startMember, Parent = null };
+        queue.Enqueue(startNode);
+        visited[startMember.Id] = startNode;
+
+        while (queue.Count > 0)
+        {
+            var currentNode = queue.Dequeue();
+            
+            // Explore all parents of the current member
+            var parents = currentNode.Member.Relationships.Select(r => r.RelatedMember).Where(m => m != null).ToList();
+            
+            foreach (var parent in parents)
+            {
+                if (parent != null && !visited.ContainsKey(parent.Id))
+                {
+                    var parentNode = new BfsNode { Member = parent, Parent = currentNode };
+                    visited[parent.Id] = parentNode;
+                    queue.Enqueue(parentNode);
+                }
+            }
+        }
+
+        return visited;
+    }
+
+    /// <summary>
+    /// Reconstructs the path from a member to a specific ancestor using the BFS tracking nodes.
+    /// </summary>
+    private RelationshipPath? ReconstructPath(Guid ancestorId, Dictionary<Guid, BfsNode> visited)
+    {
+        if (!visited.ContainsKey(ancestorId))
+            return null;
+
+        var path = new RelationshipPath();
+        var current = visited[ancestorId];
+
+        // Traverse back through parent pointers to build the path
+        while (current != null)
+        {
+            path.AddStep(new RelationshipStep { Member = current.Member });
+            current = current.Parent;
+        }
+
+        // Reverse so the path goes from member towards ancestor
+        path.ReverseSteps();
+        
+        // Set the common ancestor
+        path.CommonAncestor = visited[ancestorId].Member;
+
+        return path;
+    }
+
+    /// <summary>
+    /// Helper class for BFS tracking during ancestor exploration.
+    /// Stores a member and parent pointer for path reconstruction.
+    /// </summary>
+    private class BfsNode
+    {
+        public Member Member { get; set; } = default!;
+        public BfsNode? Parent { get; set; }  // BFS tree parent (for path reconstruction)
     }
 
     private string DescribeRelationship(RelationshipConnection connection, Member memberA, Member memberB)
     {
-
-        //Beter approach************
         var shortestDistance = Math.Min(connection.GenerationsUpFromA, connection.GenerationsUpFromB);
         var generationDifference = Math.Abs(connection.GenerationsUpFromA - connection.GenerationsUpFromB);
 
-        string? completeTerm = null;
-
-        if (shortestDistance == 1)
+        // Grandparent/Grandchild (direct line, 2+ generations apart)
+        if (shortestDistance == 1 && generationDifference >= 2)
         {
-            if (generationDifference == 0) //Should be resolved prior, but just in case
-            {
-                // Siblings
-                return GetSiblingDescription(memberA, memberB);
-            }
-            else if (generationDifference >= 1)
-            {
+            return DescribeGrandparentGrandchild(connection, memberA, memberB, generationDifference);
+        }
 
-                string generationTerm = $"{GetGeneration(generationDifference)} {(generationDifference > 1 ? "Great" : "")}";
+        // Aunt/Uncle or Niece/Nephew (one person's parent is sibling of the other)
+        if (shortestDistance == 2)
+        {
+            return DescribeAuntUncleNieceNephew(connection, memberA, memberB, generationDifference);
+        }
 
-                // Aunt/Uncle or Niece/Nephew
-                if (connection.GenerationsUpFromA < connection.GenerationsUpFromB)
-                {
-                    // memberA is Aunt/Uncle of memberB
-                    var genderedTerm = GetGenderSpecificTerm(memberA.Gender, "Aunt", "Uncle") ?? "Pibling";
-                    completeTerm = generationTerm + genderedTerm;
+        // Cousins (both descended from common ancestor through siblings)
+        if (shortestDistance >= 2)
+        {
+            return DescribeCousin(shortestDistance, generationDifference);
+        }
 
-                }
-                else
-                {
-                    // memberA is Niece/Nephew of memberB
-                    var genderedTerm = GetGenderSpecificTerm(memberB.Gender, "Niece", "Nephew") ?? "Nibling";
-                    completeTerm = generationTerm + genderedTerm;
-                }
-            }
+        return "Not related";
+    }
+
+    private string DescribeGrandparentGrandchild(RelationshipConnection connection, Member memberA, Member memberB, int generationDifference)
+    {
+        var generationPrefix = GetGenerationPrefix(generationDifference);
+
+        if (connection.GenerationsUpFromA > connection.GenerationsUpFromB)
+        {
+            // memberA is the ancestor (grandparent, great-grandparent, etc.)
+            return $"{generationPrefix}{GetGenderSpecificTerm(memberB,"mother","father")??"parent"}";
         }
         else
         {
-            // Cousins
-            var cousinDegree = shortestDistance - 1;
-            string ordinalTerm = GetOrdinal(cousinDegree);
-            string generationTerm = $"{GetGeneration(generationDifference)} Removed";
-
-            var genderedTerm = GetGenderSpecificTerm(memberA.Gender, "Cousin", "Cousin") ?? "Cousin"; //Included for translation purposes
-
-            completeTerm = ordinalTerm + generationTerm + genderedTerm;
+            // memberA is the descendant (grandchild, great-grandchild, etc.)
+            return $"{generationPrefix}{GetGenderSpecificTerm(memberB, "daughter", "son") ?? "child"}";
         }
-
-        if (completeTerm != null)
-            return completeTerm;
-        return "Not related";
-
     }
-    // TODO: Create a private helper method for BFS ancestor exploration
-    // private BfsAncestorResult GetAncestorsBfs(Member startMember)
-    // {
-    //     // This method should:
-    //     // 1. Initialize a Queue with the start member
-    //     // 2. Initialize a visited Dictionary to track: memberId -> BfsNode (with parent pointer)
-    //     // 3. Perform BFS:
-    //     //    - Dequeue current node
-    //     //    - Mark as visited
-    //     //    - Explore all parent relationships (Relationships collection)
-    //     //    - Enqueue unvisited parents, storing their parent pointer for reconstruction
-    //     // 4. Return the visited dictionary for LCA matching
-    //     //
-    //     // Note: Handle multiple parents per member (polyamory)
-    // }
 
-    // TODO: Create a private helper class/record for BFS tracking
-    // private class BfsNode
-    // {
-    //     public Member Member { get; set; }
-    //     public BfsNode? Parent { get; set; }  // BFS tree parent (for path reconstruction)
-    // }
-    private string GetGeneration(int number)
+    private string DescribeAuntUncleNieceNephew(RelationshipConnection connection, Member memberA, Member memberB, int generationDifference)
     {
-        return number switch
+        var generationPrefix = GetGenerationPrefix(generationDifference);
+
+        if (connection.GenerationsUpFromA > connection.GenerationsUpFromB)
         {
-            0 => "",
-            //1 => "",
-            _ => $"{number} x"
+            // memberA is closer to ancestor, so memberA is the aunt/uncle of memberB
+            var genderedTerm = GetGenderSpecificTerm(memberA, "Aunt", "Uncle") ?? "Pibling";
+            return $"{generationPrefix}{genderedTerm}";
+        }
+        else
+        {
+            // memberB is closer to ancestor, so memberA is the niece/nephew of memberB
+            var genderedTerm = GetGenderSpecificTerm(memberA, "Niece", "Nephew") ?? "Nibling";
+            return $"{generationPrefix}{genderedTerm}";
+        }
+    }
+
+    private string DescribeCousin(int shortestDistance, int generationDifference)
+    {
+        int cousinDegree = shortestDistance - 2; //-2 because we are including the common ancestor
+        string ordinalTerm = GetOrdinalWord(cousinDegree);
+        string generationSuffix = GetGenerationRemovedSuffix(generationDifference);
+        
+        return $"{ordinalTerm} Cousin{generationSuffix}";
+    }
+
+    private string GetGenerationRemovedSuffix(int generationDifference)
+    {
+        if (generationDifference == 0)
+            return "";
+
+        string removedTerm = generationDifference switch
+        {
+            1 => "Once",
+            2 => "Twice",
+            3 => "Thrice",
+            _ => $"{generationDifference} Times"
+        };
+
+        return $" {removedTerm} Removed";
+    }
+
+    private string GetGenerationPrefix(int generationDifference)
+    {
+        return generationDifference switch
+        {
+            1 => "",
+            2 => "Grand",
+            3 => "Great Grand",
+            4 => "Great Great Grand",
+            _ => $"{GetOrdinalWord(generationDifference - 2)} Great Grand"
         };
     }
+
     private string GetOrdinal(int number)
     {
         int lastDigit = number % 10;
@@ -236,6 +368,24 @@ public class RelationshipCalculator
             2 => $"{number}nd",
             3 => $"{number}rd",
             _ => $"{number}th"
+        };
+    }
+
+    private string GetOrdinalWord(int number)
+    {
+        return number switch
+        {
+            1 => "First",
+            2 => "Second",
+            3 => "Third",
+            4 => "Fourth",
+            5 => "Fifth",
+            6 => "Sixth",
+            7 => "Seventh",
+            8 => "Eighth",
+            9 => "Ninth",
+            10 => "Tenth",
+            _ => $"{GetOrdinal(number)}"
         };
     }
 }
