@@ -29,6 +29,6 @@ public class RelationshipService : IRelationshipService
         if (memberB == null)
             throw new InvalidOperationException($"Member with ID {memberBId} not found.");
         
-        return _calculator.CalculateRelationship(memberA, memberB);
+        return _calculator.CalculateClosestRelationship(memberA, memberB);
     }
 }

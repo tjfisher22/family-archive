@@ -29,5 +29,5 @@ public class RelationshipStep
 {
     public Member Member { get; set; } = default!;
     public Gender Gender => Member.Gender;
-    // Direction is implicit: if before LCA it's "up", if after it's "down"
+    // Direction is implicit: it should always be "up" towards ancestors
 }
