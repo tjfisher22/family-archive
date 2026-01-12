@@ -16,23 +16,35 @@ public class FamilyArchiveDbContext : DbContext
     public DbSet<Member> Members => Set<Member>();
     public DbSet<MemberName> MemberNames => Set<MemberName>();
     public DbSet<Family> Families => Set<Family>();
+    public DbSet<Clan> Clans => Set<Clan>();
     public DbSet<MemberRelationship> MemberRelationships => Set<MemberRelationship>();
     public DbSet<MemberPartnership> MemberPartnerships => Set<MemberPartnership>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Member <-> MemberName (1-to-many)
-        modelBuilder.Entity<MemberName>()
-            .HasOne(n => n.Member)
-            .WithMany(m => m.Names)
+        // Member <-> MemberName (1-to-many) - use backing field
+        modelBuilder.Entity<Member>()
+            .HasMany(m => m.Names)
+            .WithOne(n => n.Member)
             .HasForeignKey(n => n.MemberId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Member>()
+            .Navigation(m => m.Names)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         // Member <-> Family (many-to-1)
         modelBuilder.Entity<Member>()
             .HasOne(m => m.Family)
             .WithMany(f => f.Members)
             .HasForeignKey(m => m.FamilyId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Member <-> Clan (many-to-1)
+        modelBuilder.Entity<Member>()
+            .HasOne(m => m.Clan)
+            .WithMany(c => c.Members)
+            .HasForeignKey(m => m.ClanId)
             .OnDelete(DeleteBehavior.SetNull);
 
         // Member <-> MemberRelationship (1-to-many, as child)
