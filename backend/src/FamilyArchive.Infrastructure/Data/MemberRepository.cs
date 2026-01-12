@@ -43,6 +43,6 @@ public class MemberRepository : IMemberRepository
 
     public void SaveChanges()
     {
-         _context.SaveChangesAsync();
+        _context.SaveChanges();
     }
 }
