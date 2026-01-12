@@ -14,10 +14,11 @@ public class Member
     public Guid Id { get; set; }
     // List of names (first, middle, last, maiden, chosen, nickname, etc.)
     public IReadOnlyCollection<MemberName> Names => _names.AsReadOnly();
-        private List<MemberName> _names = new();
+    private List<MemberName> _names = new();
     public DateTime? BirthDate { get; set; }
     public DateTime? DeathDate { get; set; }
-    public string? Gender { get; set; }
+    public Gender Gender { get; set; }
+    public string? OtherGender { get; set; }
 
     // Relationships - Dynamic to allow many different types of relationships (only vertical relationships and partners are modeled)
 
@@ -57,7 +58,7 @@ public class Member
         EnforceOtherNameType(name, name.Type, name.OtherNameType);
         _names.Add(name);
     }
-    
+
 
     public void RemoveName(Guid memberNameId)
     {
@@ -162,5 +163,20 @@ public class Member
     {
         //add logic to shift names dynamically
         //enforce unique order starting at 0
+    }
+    public void UpdateGender(Gender gender, string? otherGender)
+    {
+        if (gender == Gender.Other)
+        {
+            if (string.IsNullOrWhiteSpace(otherGender))
+                throw new InvalidOperationException("OtherGender must be provided when Gender is Other.");
+            this.Gender = gender;
+            this.OtherGender = otherGender;
+        }
+        else
+        {
+            this.Gender = gender;
+            this.OtherGender = null;
+        }
     }
 }
