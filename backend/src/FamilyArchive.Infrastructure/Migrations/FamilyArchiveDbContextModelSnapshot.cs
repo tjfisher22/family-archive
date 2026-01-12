@@ -37,7 +37,7 @@ namespace FamilyArchive.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Clan");
+                    b.ToTable("Clans");
                 });
 
             modelBuilder.Entity("FamilyArchive.Domain.Entities.Family", b =>
@@ -76,7 +76,10 @@ namespace FamilyArchive.Infrastructure.Migrations
                     b.Property<Guid?>("FamilyId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Gender")
+                    b.Property<int>("Gender")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OtherGender")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -187,7 +190,8 @@ namespace FamilyArchive.Infrastructure.Migrations
                 {
                     b.HasOne("FamilyArchive.Domain.Entities.Clan", "Clan")
                         .WithMany("Members")
-                        .HasForeignKey("ClanId");
+                        .HasForeignKey("ClanId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("FamilyArchive.Domain.Entities.Family", "Family")
                         .WithMany("Members")
