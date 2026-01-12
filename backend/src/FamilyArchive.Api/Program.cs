@@ -16,7 +16,7 @@ builder.Services.AddDbContext<FamilyArchiveDbContext>(options =>
 // Register application services
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
-builder.Services.AddScoped<IRelationshipService, RelationshipService>();
+builder.Services.AddScoped<RelationshipService, RelationshipService>();
 
 // Register domain services
 builder.Services.AddScoped<RelationshipCalculator>();
