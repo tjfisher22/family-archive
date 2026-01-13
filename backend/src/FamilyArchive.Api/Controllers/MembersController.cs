@@ -24,7 +24,7 @@ public class MembersController : ControllerBase
     public IActionResult AddMember([FromBody] MemberDto dto)
     {
         var memberId = _memberService.AddMemberFromDto(dto);
-        _memberService.SaveMemberChanges();
+        _memberService.SaveChanges();
         return CreatedAtAction(nameof(GetMember), new { memberId }, memberId);
     }
 
@@ -50,7 +50,7 @@ public class MembersController : ControllerBase
         try
         {
             _memberService.UpdateMemberById(memberId, dto);
-            _memberService.SaveMemberChanges();
+            _memberService.SaveChanges();
             return Ok();
         }
         catch (InvalidOperationException ex)

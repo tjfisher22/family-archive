@@ -50,7 +50,7 @@ public class MemberService : IMemberService
         _repository.UpdateMember(member);
     }
 
-    public void SaveMemberChanges()
+    public void SaveChanges()
     {
         _repository.SaveChanges();
     }
