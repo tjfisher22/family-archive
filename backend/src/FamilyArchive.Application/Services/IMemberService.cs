@@ -8,5 +8,5 @@ public interface IMemberService
     MemberDto GetMemberById(Guid memberId);
     IEnumerable<MemberDto> GetAllMembers();
     void UpdateMemberById(Guid memberId, MemberDto dto);
-    void SaveMemberChanges();
+    void SaveChanges();
 }
