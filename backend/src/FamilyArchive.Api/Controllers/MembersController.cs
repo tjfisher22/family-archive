@@ -12,10 +12,12 @@ namespace FamilyArchive.Api.Controllers;
 public class MembersController : ControllerBase
 {
     private readonly IMemberService _memberService;
+    private readonly IMemberNameService _memberNameService;
 
-    public MembersController(IMemberService memberService)
+    public MembersController(IMemberService memberService, IMemberNameService memberNameService)
     {
         _memberService = memberService;
+        _memberNameService = memberNameService;
     }
     // Add a new member
     [HttpPost]
@@ -62,8 +64,8 @@ public class MembersController : ControllerBase
     {
         try
         {
-            _memberService.AddNameToMember(memberId, dto);
-            _memberService.SaveMemberChanges();
+            _memberNameService.AddNameToMember(memberId, dto);
+            _memberNameService.SaveChanges();
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -77,8 +79,8 @@ public class MembersController : ControllerBase
     {
         try
         {
-            _memberService.UpdateNameOfMember(memberId, nameId, newName);
-            _memberService.SaveMemberChanges();
+            _memberNameService.UpdateNameOfMember(memberId, nameId, newName);
+            _memberNameService.SaveChanges();
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -93,8 +95,8 @@ public class MembersController : ControllerBase
     {
         try
         {
-            _memberService.UpdateNameOrderOfMember(memberId, nameId, newOrder);
-            _memberService.SaveMemberChanges();
+            _memberNameService.UpdateNameOrderOfMember(memberId, nameId, newOrder);
+            _memberNameService.SaveChanges();
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -109,8 +111,8 @@ public class MembersController : ControllerBase
     {
         try
         {
-            _memberService.UpdateNameTypeOfMember(memberId, nameId, request.NewType, request.OtherNameType);
-            _memberService.SaveMemberChanges();
+            _memberNameService.UpdateNameTypeOfMember(memberId, nameId, request.NewType, request.OtherNameType);
+            _memberNameService.SaveChanges();
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -125,8 +127,8 @@ public class MembersController : ControllerBase
     {
         try
         {
-            _memberService.UpdateNameHiddenOfMember(memberId, nameId, hidden);
-            _memberService.SaveMemberChanges();
+            _memberNameService.UpdateNameHiddenOfMember(memberId, nameId, hidden);
+            _memberNameService.SaveChanges();
             return Ok();
         }
         catch (InvalidOperationException ex)
