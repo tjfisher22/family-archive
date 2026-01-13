@@ -32,6 +32,7 @@ public class MemberRepository : IMemberRepository
     public Member? GetMemberById(Guid memberId)
     {
         return _context.Members
+            .Include(m => m.Names)
             .Include(m => m.Relationships)
             .Include(m => m.ParentRelationships)
             .Include(m => m.Partnerships)
