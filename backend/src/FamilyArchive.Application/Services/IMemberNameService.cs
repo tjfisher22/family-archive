@@ -10,5 +10,6 @@ public interface IMemberNameService
     void UpdateNameOrderOfMember(Guid memberId, Guid nameId, int newOrder);
     void UpdateNameTypeOfMember(Guid memberId, Guid nameId, NameType? newType, string? otherNameType);
     void UpdateNameHiddenOfMember(Guid memberId, Guid nameId, bool hidden);
+    void RemoveNameFromMember(Guid memberId, Guid nameId);
     void SaveChanges();
 }

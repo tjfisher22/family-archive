@@ -21,6 +21,14 @@ public class MemberRelationshipService : IMemberRelationshipService
         _repository.UpdateMember(parent);
     }
 
+    public void RemoveChildFromMember(Guid parentId, Guid childId)
+    {
+        var parent = GetMember(parentId);
+        var child = GetMember(childId);
+        parent.RemoveChild(child);
+        _repository.UpdateMember(parent);
+    }
+
     public void AddPartnerToMember(Guid memberId, Guid partnerId, PartnershipType partnershipType, string? otherPartnershipType, DateTime? startDate)
     {
         var member = GetMember(memberId);

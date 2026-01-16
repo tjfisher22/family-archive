@@ -59,6 +59,12 @@ public class MemberNameService : IMemberNameService
         member.UpdateNameHidden(nameId, hidden);
         _repository.UpdateMember(member);
     }
+    public void RemoveNameFromMember(Guid memberId, Guid nameId)
+    {
+        var member = GetMember(memberId);
+        member.RemoveName(nameId);
+        _repository.UpdateMember(member);
+    }
 
     public void SaveChanges()
     {
