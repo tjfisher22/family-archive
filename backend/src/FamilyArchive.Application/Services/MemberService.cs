@@ -1,5 +1,6 @@
 ﻿using FamilyArchive.Application.DTOs;
 using FamilyArchive.Domain.Entities;
+using FamilyArchive.Domain.Enums;
 using System;
 using System.Linq;
 
@@ -47,6 +48,22 @@ public class MemberService : IMemberService
         member.BirthDate = dto.BirthDate;
         member.DeathDate = dto.DeathDate;
         member.FamilyId = dto.FamilyId;
+        _repository.UpdateMember(member);
+    }
+
+    public void RemoveMemberById(Guid memberId)
+    {
+        var existingMember = _repository.GetMemberById(memberId);
+        if (existingMember == null) throw new InvalidOperationException("Member not found");
+        _repository.RemoveMember(existingMember);
+    }
+
+    public void UpdateGenderOfMember(Guid memberId, Gender gender, string? otherGender)
+    {
+        var member = _repository.GetMemberById(memberId);
+        if (member == null) throw new InvalidOperationException("Member not found");
+        
+        member.UpdateGender(gender, otherGender);
         _repository.UpdateMember(member);
     }
 
