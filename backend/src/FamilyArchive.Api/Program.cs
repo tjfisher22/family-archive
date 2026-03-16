@@ -2,12 +2,11 @@ using FamilyArchive.Infrastructure.Data;
 using FamilyArchive.Application.Services;
 using FamilyArchive.Domain.Services;
 using Microsoft.EntityFrameworkCore;
-using Swashbuckle.AspNetCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
-builder.Services.AddSwaggerGen();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<FamilyArchiveDbContext>(options =>
@@ -30,8 +29,8 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
