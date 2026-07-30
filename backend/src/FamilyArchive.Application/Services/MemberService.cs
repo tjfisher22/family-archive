@@ -2,23 +2,9 @@
 using FamilyArchive.Domain.Entities;
 using FamilyArchive.Domain.Enums;
 using System;
-using System.Diagnostics.Metrics;
 using System.Linq;
 
 namespace FamilyArchive.Application.Services;
-
-public interface IMemberService
-{
-    Guid AddMemberFromDto(MemberDto dto);
-    MemberDto GetMemberById(Guid memberId);
-    void UpdateMemberById(Guid memberId, MemberDto dto);
-    void AddNameToMember(Guid memberId, MemberNameDto dto);
-    void UpdateNameOfMember(Guid memberId, Guid nameId, string NewName);
-    void SaveMemberChanges();
-    void UpdateNameOrderOfMember(Guid memberId, Guid nameId, int newOrder);
-    void UpdateNameTypeOfMember(Guid memberId, Guid nameId, NameType? newType, string? OtherNameType);
-    void UpdateNameHiddenOfMember(Guid memberId, Guid nameId, bool hidden);
-}
 
 public class MemberService : IMemberService
 {
@@ -28,6 +14,7 @@ public class MemberService : IMemberService
     {
         _repository = repository;
     }
+
     public Guid AddMemberFromDto(MemberDto dto)
     {
         var member = new Member
@@ -40,6 +27,7 @@ public class MemberService : IMemberService
         _repository.AddMember(member);
         return member.Id;
     }
+
     public MemberDto GetMemberById(Guid memberId)
     {
         var member = _repository.GetMemberById(memberId);
@@ -47,14 +35,14 @@ public class MemberService : IMemberService
         return ToDto(member);
     }
 
-    public void SaveMemberChanges()
+    public IEnumerable<MemberDto> GetAllMembers()
     {
-        _repository.SaveChanges();
+        var members = _repository.GetAllMembers();
+        return members.Select(ToDto);
     }
 
     public void UpdateMemberById(Guid memberId, MemberDto dto)
     {
-       
         var member = _repository.GetMemberById(memberId);
         if (member == null) throw new InvalidOperationException("Member not found");
         member.BirthDate = dto.BirthDate;
@@ -63,59 +51,27 @@ public class MemberService : IMemberService
         _repository.UpdateMember(member);
     }
 
-    public void AddNameToMember(Guid memberId, MemberNameDto dto)
+    public void RemoveMemberById(Guid memberId)
+    {
+        var existingMember = _repository.GetMemberById(memberId);
+        if (existingMember == null) throw new InvalidOperationException("Member not found");
+        _repository.RemoveMember(existingMember);
+    }
+
+    public void UpdateGenderOfMember(Guid memberId, Gender gender, string? otherGender)
     {
         var member = _repository.GetMemberById(memberId);
         if (member == null) throw new InvalidOperationException("Member not found");
-
-        var name = new MemberName
-        {
-            Id = Guid.NewGuid(),
-            MemberId = memberId,
-            Value = dto.Value,
-            Type = dto.Type,
-            OtherNameType = dto.OtherNameType,
-            Order = dto.Order,
-            Hidden = dto.Hidden
-        };
-
-        member.AddName(name); 
+        
+        member.UpdateGender(gender, otherGender);
         _repository.UpdateMember(member);
     }
 
-    public void UpdateNameOfMember(Guid memberId, Guid nameId, string newName)
+    public void SaveChanges()
     {
-        var member = GetMember(memberId);
-        member.UpdateNameValue(nameId, newName);
-        _repository.UpdateMember(member);
-    }
-    public void UpdateNameOrderOfMember(Guid memberId, Guid nameId, int newOrder)
-    {
-        var member = GetMember(memberId);
-        member.UpdateNameOrder(nameId, newOrder);
-        _repository.UpdateMember(member);
+        _repository.SaveChanges();
     }
 
-    public void UpdateNameTypeOfMember(Guid memberId, Guid nameId, NameType? newType, string? OtherNameType)
-    {
-        var member = GetMember(memberId);
-        member.UpdateNameType(nameId, newType, OtherNameType);
-        _repository.UpdateMember(member);
-    }
-
-    public void UpdateNameHiddenOfMember(Guid memberId, Guid nameId, bool hidden)
-    {
-        var member = GetMember(memberId);
-        member.UpdateNameHidden(nameId, hidden);
-        _repository.UpdateMember(member);
-    }
-
-    private Member GetMember(Guid memberId)
-    {
-        var member = _repository.GetMemberById(memberId);
-        if (member == null) throw new InvalidOperationException("Member not found");
-        return member;
-    }
     private MemberDto ToDto(Member member)
     {
         return new MemberDto
