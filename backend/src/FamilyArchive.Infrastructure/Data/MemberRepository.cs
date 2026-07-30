@@ -40,7 +40,14 @@ public class MemberRepository : IMemberRepository
             .Include(m => m.Family)
             .FirstOrDefault(m => m.Id == memberId);
     }
-
+    public IEnumerable<Member> GetAllMembers()
+    {
+        return _context.Members
+            .Include(m => m.Names)
+            .Include(m => m.Family)
+            .Include(m => m.Clan)
+            .ToList();
+    }
 
     public void SaveChanges()
     {

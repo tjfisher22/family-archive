@@ -62,7 +62,18 @@ public class Member
 
     public void RemoveName(Guid memberNameId)
     {
-        _names.RemoveAll(_names => _names.Id == memberNameId);
+        var nameToRemove = _names.FirstOrDefault(n => n.Id == memberNameId);
+        if (nameToRemove == null)
+            return;
+
+        _names.Remove(nameToRemove);
+
+        // Normalize orders to ensure they start at 0 and are consecutive
+        var orderedNames = _names.OrderBy(n => n.Order).ToList();
+        for (int i = 0; i < orderedNames.Count; i++)
+        {
+            orderedNames[i].Order = i;
+        }
     }
 
     public void AddChild(Member child, RelationshipType relationshipType, string? relationshipOtherType, DateTime? establishedDate = null)
@@ -161,8 +172,45 @@ public class Member
     }
     public void ReorderName(Guid memberNameId, int newOrder)
     {
-        //add logic to shift names dynamically
-        //enforce unique order starting at 0
+        var name = _names.FirstOrDefault(n => n.Id == memberNameId);
+        if (name == null)
+            throw new InvalidOperationException("Name not found.");
+
+        if (newOrder < 0)
+            throw new InvalidOperationException("Order must be greater than or equal to 0.");
+
+        int currentOrder = name.Order;
+        
+        if (currentOrder == newOrder)
+            return;
+
+        // Shift names between old and new positions
+        if (newOrder < currentOrder)
+        {
+            // Moving up (to lower order number)
+            foreach (var n in _names.Where(n => n.Order >= newOrder && n.Order < currentOrder))
+            {
+                n.Order++;
+            }
+        }
+        else
+        {
+            // Moving down (to higher order number)
+            foreach (var n in _names.Where(n => n.Order > currentOrder && n.Order <= newOrder))
+            {
+                n.Order--;
+            }
+        }
+
+        // Set the new order for the target name
+        name.Order = newOrder;
+
+        // Normalize orders to ensure they start at 0 and are consecutive
+        var orderedNames = _names.OrderBy(n => n.Order).ToList();
+        for (int i = 0; i < orderedNames.Count; i++)
+        {
+            orderedNames[i].Order = i;
+        }
     }
     public void UpdateGender(Gender gender, string? otherGender)
     {
